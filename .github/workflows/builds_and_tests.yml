@@ -8,15 +8,15 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build:
+
+  build_and_npm_security_tests:
   
     runs-on: ubuntu-latest
-
+    
     strategy:
       matrix:
         node-version: [20.x]
         # original matrix [18.x, 20.x, 22.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
     - name: Checkout of the Repo  
@@ -30,6 +30,33 @@ jobs:
 
     - name: Install Dependencies         
       run: npm install
-      
+
+    - name: Runs "npm audit" Secirity Check   
+      run: npm run test-npm-security
+
+
+  build_and_integration_tests:
+  
+    runs-on: ubuntu-latest
+    needs: build_and_npm_security_tests
+
+    strategy:
+      matrix:
+        node-version: [20.x] 
+        # original matrix [18.x, 20.x, 22.x]
+       
+    steps:
+    - name: Checkout of the Repo  
+      uses: actions/checkout@v4
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+
+    - name: Install Dependencies         
+      run: npm install
+
     - name: Run Integration Tests   
       run: npm test
